@@ -11,6 +11,7 @@ import MermaidDiagram from "@/components/MermaidDiagram";
 import ProviderSettings from "@/components/ProviderSettings";
 import WhatsAppSettings from "@/components/WhatsAppSettings";
 import MCPSettings from "@/components/MCPSettings";
+import Markdown from "@/components/Markdown";
 
 export default function ChatPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function ChatPage() {
   const [activeTab, setActiveTab] = useState("chat");
   const [user, setUser] = useState<any>(null);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [isAgentMode, setIsAgentMode] = useState(false);
 
   const { messages, input, handleInputChange, handleSubmit } = useChat() as any;
 
@@ -47,7 +49,8 @@ export default function ChatPage() {
         provider: config.provider || "openai",
         model: config.model || "gpt-4o",
         apiKeys: keys,
-        mcpServers: mcpServers
+        mcpServers: mcpServers,
+        isAgentMode: isAgentMode
       }
     });
   };
@@ -96,7 +99,28 @@ export default function ChatPage() {
 
       <main className="flex-1 flex flex-col relative">
         <header className="h-16 border-b border-neutral-900 flex items-center px-6 justify-between">
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="hover:bg-neutral-800 p-2 rounded-xl"><Menu size={20}/></button>
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="hover:bg-neutral-800 p-2 rounded-xl"><Menu size={20}/></button>
+            <h1 className="text-sm font-bold tracking-widest uppercase text-neutral-500">
+              {activeTab === "chat" ? (isAgentMode ? "Super Agent Mode" : "Fast Chat Mode") : activeTab}
+            </h1>
+          </div>
+          {activeTab === "chat" && (
+            <div className="flex items-center gap-2 bg-neutral-900 p-1 rounded-xl border border-neutral-800">
+              <button 
+                onClick={() => setIsAgentMode(false)}
+                className={cn("px-3 py-1.5 rounded-lg text-xs font-bold transition-all", !isAgentMode ? "bg-blue-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300")}
+              >
+                Fast
+              </button>
+              <button 
+                onClick={() => setIsAgentMode(true)}
+                className={cn("px-3 py-1.5 rounded-lg text-xs font-bold transition-all", isAgentMode ? "bg-purple-600 text-white shadow-lg" : "text-neutral-500 hover:text-neutral-300")}
+              >
+                Agent
+              </button>
+            </div>
+          )}
         </header>
 
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
@@ -117,8 +141,8 @@ export default function ChatPage() {
                       {m.role === "user" ? <User size={20} className="text-neutral-400" /> : <Bot size={20} className="text-white" />}
                     </div>
                     <div className="flex-1">
-                       <div className={cn("text-neutral-200 text-sm md:text-base whitespace-pre-wrap", m.role === "user" ? "text-right" : "text-left")}>
-                         {m.content}
+                       <div className={cn("text-neutral-200", m.role === "user" ? "text-right" : "text-left")}>
+                         <Markdown content={m.content} />
                        </div>
                     </div>
                   </div>
